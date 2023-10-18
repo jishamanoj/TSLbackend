@@ -1,5 +1,7 @@
-// registrationModel.js
-const { DataTypes, Sequelize } = require('sequelize');
+const {Sequelize,DataTypes} = require('sequelize');
+
+
+
 const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
     dialect: 'mysql'
 });
@@ -23,13 +25,6 @@ const reg = sequelize.define('reg', {
 }, {
     timestamps: false,
 })
-reg.sync().then((data)=>{
-        //console.log(data);
-        console.log('table created');
-    })
-    .catch((err)=>{
-        console.log(err);
-    });
-
-module.exports = reg;
-
+// reg.query('SELECT COUNT(id) FROM regs').then((res)=>{
+//         console.log(res)
+// })
