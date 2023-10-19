@@ -21,6 +21,7 @@ const io = new Server(httpServer, { cors : { origin : "*"}});
 
 
 io.on('connection', function(soc){
+    console.log('connection');
 soc.on('fetchusers',()=>{
    
     sequelize.query("SELECT COUNT(id) AS count FROM `regs`", { type: QueryTypes.SELECT }).then(function  (results) {  soc.emit('usersupdate',{results} ); 
@@ -29,8 +30,6 @@ soc.on('fetchusers',()=>{
 })
     
 })
-
-
 
 console.log('qwerty')
 sequelize.authenticate()

@@ -4,40 +4,7 @@ const router = express.Router();
 const twilio = require('twilio');
 const axios = require('axios');
 const Country =require('../model/country');
-// router.post('/registerUser', async (req, res) => {
-//     const { first_name, last_name, DOB, email, country, phone, reference, language,remark } = req.body;
 
-//     try {
-//         const existingUser = await reg.findOne({ where: { email: email, phone: phone } });
-//         console.log(existingUser);
-//         if (existingUser) {
-//             res.status(400).send({ message: "User already exists" });
-//         } else {
-//             const user = await reg.create({
-//                 first_name,
-//                 last_name,
-//                 DOB,
-//                 email,
-//                 country,
-//                 phone,
-//                 reference,
-//                 language,
-//                 remark
-//             });
-//             res.status(200).send({ message: "User registered successfully" });
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send({ message: "An error occurred" });
-//     }
-// });
-
-
-// io.on('connection',function (socket){
-//     socket.on('fetchusers',()=> {
-//         socket.emit()
-//     })
-// })
 router.post('/registerUser', async (req, res) => {
     const { first_name, last_name, DOB, email, country, phone, reference, language, remark } = req.body;
 
@@ -47,10 +14,12 @@ router.post('/registerUser', async (req, res) => {
         if (existingUser) {
             res.status(400).send({ message: "User already exists" });
         } else {
+            otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+
             const otpRequest = {
                 method: 'get',
 
-                url :`'https://www.fast2sms.com/dev/bulkV2?authorization=YOUR_API_KEY&variables_values=5599&route=otp&numbers=${phone}`,
+                url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
               //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
                 headers: {
                     Accept: 'application/json'
@@ -60,8 +29,8 @@ router.post('/registerUser', async (req, res) => {
             axios(otpRequest)
                 .then(async (response) => {
                     
-                    const otp = random.int((min = 0), (max = 1)) // Extract the OTP from the response
-                    console.log(otp);
+                    // const otp = random.int((min = 0), (max = 1)) // Extract the OTP from the response
+                    // console.log(otp);
 
                     // Save the user data to the database, including OTP
                     const user = await reg.create({
@@ -89,67 +58,63 @@ router.post('/registerUser', async (req, res) => {
         res.status(500).send({ message: "An error occurred" });
     }
 });
-// router.post("/verify_otp", async (req, res) => {
-//     console.log("<........verify OTP user........>");
-//     const number = req.body.phone;
-//     console.log(number);
+router.post("/verify_otp", async (req, res) => {
+    console.log("<........verify OTP user........>");
+    const { phone, OTP } = req.body; // Extract phone and OTP from req.body
+    console.log("Phone: " + phone);
+    console.log("OTP: " + OTP);
   
-//     try {
-//       // Find the user with the provided phone number
-//       const user = await reg.findOne({ where: { phone: number } });
+    try {
+      // Find the user with the provided phone number
+      const user = await reg.findOne({ where: { phone: phone } });
   
-//       if (!user) {
-//         res.status(401).send("User not found");
-//       } else {
-//         console.log("................");
-//         console.log(user.otp);
+      if (!user) {
+        res.status(401).send("User not found");
+      } else {
+        console.log("................");
+        console.log("Stored OTP: " + user.otp);
   
-//         if (user.otp === req.body.OTP) {
-//           // Clear the OTP and save the user
-//           user.otp = '';
-//           await user.save();
+        if (user.otp === OTP) {
+          // Clear the OTP and save the user
+          user.otp = '';
+          await user.save();
   
-//           res.status(200).send("Success");
-//         } else {
-//           res.status(400).send("Invalid OTP");
-//           console.log(number);
+          res.status(200).send("Success");
+        } else {
+          res.status(400).send("Invalid OTP");
   
-//           // If OTP is invalid, you may choose to remove the user
-//           await user.destroy();
+          // If OTP is invalid, delete the user record
+          await user.destroy();
   
-//           // You can respond to the client as needed
-//           res.json({
-//             message: 'User deleted successfully',
-//           });
-//         }
-//       }
-//     } catch (err) {
-//       console.log("<........error........>" + err);
-//       res.status(400).send(err);
-//     }
-//   });
+          // You can respond to the client as needed
+          res.json({
+            message: 'User deleted successfully',
+          });
+        }
+      }
+    } catch (err) {
+      console.log("<........error........>" + err);
+      res.status(400).send(err);
+    }
+  });
   
-
-const accountSid = 'AC103d96242eb9ce2785095820ec24b563';
-
-const authToken = '394742e97eccd37d5dc0940f5f097120';
-
-const twilioPhoneNumber = '+12295979290';
-
-const client = new twilio(accountSid, authToken);
-
-
-router.post('/send-sms', (req, res) => {
+  router.post('/send-sms', (req, res) => {
     const to = req.body.to; // Extract 'to' from the request body
 
     // Use the Twilio client to send an SMS
-    client.messages
-        .create({
-            body: "Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :+91 9008290027",
-            from: twilioPhoneNumber,
-            to: to,
-        })
-        .then((message) => {
+    
+    const sms = {
+        method: 'get',
+
+
+        url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&message=Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :+91 9008290027&language=english&route=q&numbers=${to}`,
+      //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
+        headers: {
+            Accept: 'application/json'
+        }
+    };
+    
+    axios(sms).then((message) => {
             console.log(`SMS sent: ${message.sid}`);
             res.status(200).json({ status: 'SMS sent successfully' });
         })
@@ -158,7 +123,6 @@ router.post('/send-sms', (req, res) => {
             res.status(500).json({ error: 'Failed to send SMS' });
         });
 });
-
 
 router.post('/countries', async (req, res) => {
     const data = req.body; // Assuming req.body is an array of objects
