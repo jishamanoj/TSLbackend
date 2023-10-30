@@ -5,22 +5,166 @@ const twilio = require('twilio');
 const axios = require('axios');
 const Country =require('../model/country');
 
+// router.post('/registerUser', async (req, res) => {
+//     const { first_name, last_name, DOB, email, country, phone, reference, language, remark } = req.body;
+
+//     try {
+//         const existingUser = await reg.findOne({ where: { email: email, phone: phone } });
+//         console.log("existing.....................", existingUser);
+
+//         if (existingUser) {
+//             // if (existingUser.verify === 'false') {
+//             //     console.log('....................');
+//             //     // User is not verified, update the user's fields using the `update` method
+//             //     const [updatedUser] = await reg.update(
+//             //         {
+//             //             first_name,
+//             //             last_name,
+//             //             DOB,
+//             //             email,
+//             //             country,
+//             //             reference,
+//             //             language,
+//             //             remark
+//             //         },
+//             //         {
+//             //             where: { id: existingUser.id } // Provide the ID of the user to update
+//             //         }
+//             //     );
+//             //     console.log("..............................",updatedUser);
+
+//             //     if (updatedRowCount > 0) {
+//             //         res.status(200).send({ message: "User record updated" });
+//             //     } else {
+//             //         res.status(500).send({ message: "Failed to update user record" });
+//             //     }
+//             // } else {
+//                 res.status(400).send({ message: "User already exists" });
+//             //}
+//         } else {
+//             // User does not exist, generate a new OTP and save the user with verify set as false
+//             const otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+
+//             const otpRequest = {
+//                 method: 'get',
+//                 url: `https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
+//                 headers: {
+//                     Accept: 'application/json'
+//                 }
+//             };
+
+//             axios(otpRequest)
+//                 .then(async (response) => {
+//                     // Save the user data to the database, including OTP and verify set as false
+//                     const user = await reg.create({
+//                         first_name,
+//                         last_name,
+//                         DOB,
+//                         email,
+//                         country,
+//                         phone,
+//                         reference,
+//                         language,
+//                         remark,
+//                         verify: 'false',
+//                         otp // Store OTP in the database
+//                     });
+
+//                     res.status(200).send({ message: "User registered successfully" });
+//                 })
+//                 .catch((error) => {
+//                     console.error(error);
+//                     res.status(400).send({ message: "An error occurred while requesting OTP" });
+//                 });
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send({ message: "An error occurred" });
+//     }
+// });
+// router.post("/resend_otp", async (req, res) => {
+//     const { phone } = req.body;
+
+//     try {
+//         // Find the user with the provided phone number
+//         const user = await reg.findOne({ where: { phone: phone } });
+
+//         if (!user) {
+//             res.status(401).send("User not found");
+//         } else {
+//             // Generate a new OTP
+//             const otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+
+//             // Send the new OTP
+//             const otpRequest = {
+//                 method: 'get',
+//                 url: `https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
+//                 headers: {
+//                     Accept: 'application/json'
+//                 }
+//             };
+
+//             axios(otpRequest)
+//                 .then(async (response) => {
+//                     // Update the user's OTP
+//                     user.otp = otp;
+//                     await user.save();
+
+//                     res.status(200).send("OTP resent successfully");
+//                 })
+//                 .catch((error) => {
+//                     console.error(error);
+//                     res.status(400).send({ message: "An error occurred while resending OTP" });
+//                 });
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send({ message: "An error occurred" });
+//     }
+// });
+const { Op } = require("sequelize");
 router.post('/registerUser', async (req, res) => {
-    const { first_name, last_name, DOB, email, country, phone, reference, language, remark } = req.body;
+    const { first_name, last_name, DOB,gender, email, country, phone, reference, language, remark } = req.body;
 
     try {
-        const existingUser = await reg.findOne({ where: { email: email, phone: phone } });
-        console.log(existingUser);
+        const existingUser = await reg.findOne({
+            where: {
+                [Op.or]: [
+                    { email: email },
+                    { phone: phone }
+                ]
+            }
+        });
+
         if (existingUser) {
-            res.status(400).send({ message: "User already exists" });
+            
+            
+            if (existingUser.verify === 'false') {
+               
+                // User is not verified, update the user's fields
+                existingUser.first_name = first_name;
+                existingUser.last_name = last_name;
+                existingUser.DOB = DOB;
+                existingUser.gender = gender
+                existingUser.email = email;
+                existingUser.country = country;
+                existingUser.reference = reference;
+                existingUser.language = language;
+                existingUser.remark = remark;
+
+                await existingUser.save();
+
+                res.status(200).send({ message: "User record updated" });
+            } else {
+                res.status(400).send({ message: "User already exists" });
+            }
         } else {
-            otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+            // User does not exist, generate a new OTP and save the user with verify set as false
+            const otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
 
             const otpRequest = {
                 method: 'get',
-
-                url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
-              //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
+                url: `https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
                 headers: {
                     Accept: 'application/json'
                 }
@@ -28,21 +172,19 @@ router.post('/registerUser', async (req, res) => {
 
             axios(otpRequest)
                 .then(async (response) => {
-                    
-                    // const otp = random.int((min = 0), (max = 1)) // Extract the OTP from the response
-                    // console.log(otp);
-
-                    // Save the user data to the database, including OTP
+                    // Save the user data to the database, including OTP and verify set as false
                     const user = await reg.create({
                         first_name,
                         last_name,
                         DOB,
+                        gender,
                         email,
                         country,
                         phone,
                         reference,
                         language,
                         remark,
+                        verify: false,
                         otp // Store OTP in the database
                     });
 
@@ -58,6 +200,8 @@ router.post('/registerUser', async (req, res) => {
         res.status(500).send({ message: "An error occurred" });
     }
 });
+
+
 router.post("/verify_otp", async (req, res) => {
     console.log("<........verify OTP user........>");
     const { phone, OTP } = req.body; // Extract phone and OTP from req.body
@@ -77,6 +221,7 @@ router.post("/verify_otp", async (req, res) => {
         if (user.otp === OTP) {
           // Clear the OTP and save the user
           user.otp = '';
+          user.verify = 'true';
           await user.save();
   
           res.status(200).send("Success");
@@ -107,7 +252,7 @@ router.post("/verify_otp", async (req, res) => {
         method: 'get',
 
 
-        url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&message=Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :+91 9008290027&language=english&route=q&numbers=${to}`,
+        url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&message=Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :+919008290027&language=english&route=q&numbers=${to}`,
       //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
         headers: {
             Accept: 'application/json'
@@ -150,5 +295,46 @@ router.get('/countrieslist', async (req, res) => {
         res.status(500).send({ message: "An error occurred while fetching countries" });
     }
 });
+router.post('/resendOtp', async (req, res) => {
+    const { phone } = req.body;
+
+    try {
+        // Find the user with the provided phone number
+        const user = await reg.findOne({ where: { phone: phone } });
+
+        if (user) {
+            // Generate a new OTP
+            const otp = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+
+            // Send the new OTP to the user (you can use your OTP sending logic here)
+            const otpRequest = {
+                method: 'get',
+                url: `https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&variables_values=${otp}&route=otp&numbers=${phone}`,
+                headers: {
+                    Accept: 'application/json'
+                }
+            };
+
+            axios(otpRequest)
+                .then(async (response) => {
+                    // Update the user's OTP in the database
+                    user.otp = otp;
+                    await user.save();
+
+                    res.status(200).send({ message: "OTP resent successfully" });
+                })
+                .catch((error) => {
+                    console.error(error);
+                    res.status(400).send({ message: "An error occurred while requesting OTP" });
+                });
+        } else {
+            res.status(400).send({ message: "User not found" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "An error occurred" });
+    }
+});
+
 
 module.exports = router;

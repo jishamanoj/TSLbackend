@@ -8,6 +8,7 @@ const reg = sequelize.define('reg', {
     first_name: { type: DataTypes.STRING },
     last_name: { type: DataTypes.STRING },
     DOB: { type: DataTypes.STRING },
+    gender : { type: DataTypes.STRING },
     email: { type: DataTypes.STRING ,
     unique: true,
     allowNull: false
@@ -19,7 +20,9 @@ const reg = sequelize.define('reg', {
     reference: { type: DataTypes.STRING },
     language: { type: DataTypes.STRING },
     remark: { type: DataTypes.STRING },
-    otp: { type: DataTypes.STRING }
+    otp: { type: DataTypes.STRING },
+    verify: { type: DataTypes.STRING,
+        defaultValue: 'false'}
 }, {
     timestamps: false,
 })
