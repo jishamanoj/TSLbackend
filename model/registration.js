@@ -25,8 +25,12 @@ const reg = sequelize.define('reg', {
         defaultValue: 'false'},
         userId :{
           type: DataTypes.INTEGER,
-          autoIncrement: true,  
-        }
+          defaultValue: 4000      
+        },
+        otpTimestamp: { 
+            type: DataTypes.DATE,
+            allowNull: true
+        },
 }, 
 {
     timestamps: false,
