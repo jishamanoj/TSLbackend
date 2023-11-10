@@ -1,4 +1,4 @@
-// registrationModel.js
+
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
     dialect: 'mysql'
@@ -22,8 +22,13 @@ const reg = sequelize.define('reg', {
     remark: { type: DataTypes.STRING },
     otp: { type: DataTypes.STRING },
     verify: { type: DataTypes.STRING,
-        defaultValue: 'false'}
-}, {
+        defaultValue: 'false'},
+        userId :{
+          type: DataTypes.INTEGER,
+          autoIncrement: true,  
+        }
+}, 
+{
     timestamps: false,
 })
 reg.sync().then((data)=>{
@@ -32,7 +37,8 @@ reg.sync().then((data)=>{
     })
     .catch((err)=>{
         console.log(err);
-    });
+    }
+    );
 
 module.exports = reg;
 

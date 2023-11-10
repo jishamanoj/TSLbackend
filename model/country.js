@@ -7,7 +7,8 @@ const country = sequelize.define('country', {
     code: { type: DataTypes.STRING },
     phonecode: { type: DataTypes.STRING },
     flag: { type: DataTypes.STRING }
-}, {
+},
+ {
     timestamps: false,
 })
 country.sync({alter: true}).then((data)=>{
@@ -15,5 +16,6 @@ country.sync({alter: true}).then((data)=>{
 })
 .catch((err)=>{
     console.log(err);
-});
+}
+);
 module.exports = country;

@@ -15,21 +15,29 @@ const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
 });
 
 
-const httpServer = http.createServer(app)
+const server = http.createServer(app)
+const io = new Server(server, {
+    cors: {
+      origin: '*', // Adjust this to allow specific origins
+      methods: ['GET', 'POST'] // Define the methods you wish to allow
+    }
+  });
 
-const io = new Server(httpServer, { cors : { origin : "*"}});
-
-
-io.on('connection', function(soc){
-    console.log('connection');
-soc.on('fetchusers',()=>{
-   
-    sequelize.query("SELECT COUNT(id) AS count FROM `regs`", { type: QueryTypes.SELECT }).then(function  (results) {  soc.emit('usersupdate',{results} ); 
-
-})
-})
-    
-})
+  io.on('connection', (socket) => {
+    console.log('Connection established');
+  
+    socket.on('fetchusers', () => {
+      sequelize.query("SELECT COUNT(id) AS count FROM regs", { type: QueryTypes.SELECT })
+        .then((results) => {
+          socket.emit('usersupdate', { results });
+        })
+        .catch((error) => {
+          console.error('Error fetching users:', error);
+          socket.emit('error', 'Failed to fetch users');
+        });
+   })
+  
+  })
 
 console.log('qwerty')
 sequelize.authenticate()
@@ -40,6 +48,6 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
-httpServer.listen(3000, () => {
+    server.listen(3000, () => {
     console.log('Listening on port 3000');
 });

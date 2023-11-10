@@ -5,5 +5,6 @@ const cors = require('cors');
 const app = express();
 //app.use(bodyParser())
 app.use(cors())
-app.use('/reistrations',require('../controller/userController'))
+app.use('/registrations',require('../controller/userController'));
+app.use('/POC',require('../controller/poc'));
 module.exports = app;

@@ -8,8 +8,8 @@ const Country =require('../model/country');
 
 const { Op } = require("sequelize");
 router.post('/registerUser', async (req, res) => {
-    const { first_name, last_name, DOB,gender, email, country, phone, reference, language, remark } = req.body;
-
+   const { first_name, last_name, DOB,gender, email, country, phone, reference, language, remark } = req.body;
+// const{email,phone} = req.body;
     try {
         const existingUser = await reg.findOne({
             where: {
@@ -68,7 +68,7 @@ router.post('/registerUser', async (req, res) => {
                         reference,
                         language,
                         remark,
-                        verify: false,
+                        verify: 'false',
                         otp // Store OTP in the database
                     });
 
@@ -97,35 +97,32 @@ router.post("/verify_otp", async (req, res) => {
       const user = await reg.findOne({ where: { phone: phone } });
   
       if (!user) {
-        res.status(401).send("User not found");
+        return res.status(401).send("User not found");
+      }
+  
+      console.log("................");
+      console.log("Stored OTP: " + user.otp);
+  
+      if (user.otp === OTP) {
+        // Clear the OTP and save the user
+        user.otp = '';
+        user.verify = 'true';
+        await user.save();
+  
+        return res.status(200).send("Success");
       } else {
-        console.log("................");
-        console.log("Stored OTP: " + user.otp);
+        // If OTP is invalid, delete the user record
+        await user.destroy();
   
-        if (user.otp === OTP) {
-          // Clear the OTP and save the user
-          user.otp = '';
-          user.verify = 'true';
-          await user.save();
-  
-          res.status(200).send("Success");
-        } else {
-          res.status(400).send("Invalid OTP");
-  
-          // If OTP is invalid, delete the user record
-          await user.destroy();
-  
-          // You can respond to the client as needed
-          res.json({
-            message: 'User deleted successfully',
-          });
-        }
+        // Respond with an error message
+        return res.status(400).send("Invalid OTP");
       }
     } catch (err) {
       console.log("<........error........>" + err);
-      res.status(400).send(err);
+      return res.status(500).send(err);
     }
   });
+  
   
   router.post('/send-sms', (req, res) => {
     const to = req.body.to; // Extract 'to' from the request body
@@ -203,6 +200,7 @@ router.post('/resendOtp', async (req, res) => {
                 .then(async (response) => {
                     // Update the user's OTP in the database
                     user.otp = otp;
+                    user.verify = 'false';
                     await user.save();
 
                     res.status(200).send({ message: "OTP resent successfully" });
