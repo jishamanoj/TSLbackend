@@ -269,4 +269,40 @@ router.post('/resendOtp', async (req, res) => {
 });
 
 
+
+router.get('/listName/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the member with the provided id
+        const selectedMember = await reg.findByPk(id);
+
+        if (!selectedMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Fetch the next 4 members including the selected member based on the id in ascending order
+        const members = await reg.findAll({
+            where: {
+                id: {
+                    [Op.gte]: selectedMember.id, // Greater than or equal to the selected member's id
+                },
+            },
+            order: [['id', 'ASC']], // Order by id in ascending order
+            limit: 5, // Limit to retrieve 5 records
+            attributes: ['first_name', 'last_name'], // Select only the first_name and last_name columns
+        });
+
+        const processedData = members.map(user => ({
+            name: `${user.first_name} ${user.last_name}`,
+        }));
+
+        res.status(200).json(processedData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred' });
+    }
+});
+
+
 module.exports = router;
