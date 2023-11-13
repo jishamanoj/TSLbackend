@@ -8,6 +8,7 @@ const Country =require('../model/country');
 
 const { Op } = require("sequelize");
 router.post('/registerUser', async (req, res) => {
+    console.log("enter")
   // const { first_name, last_name, DOB,gender, email, country, phone, reference, language, remark } = req.body;
  const{email,phone} = req.body;
     try {
@@ -22,7 +23,7 @@ router.post('/registerUser', async (req, res) => {
 
         if (existingUser) {
                  
-                res.status(400).send({ message: "User already exists" });
+               return res.status(400).send({ message: "User already exists" });
             }
          else {
             // User does not exist, generate a new OTP and save the user with verify set as false
@@ -48,16 +49,16 @@ router.post('/registerUser', async (req, res) => {
                         // Store OTP in the database
                     });
 
-                    res.status(200).send({ message: "User registered successfully" });
+                   return res.status(200).send({ message: "User registered successfully" });
                 })
                 .catch((error) => {
                     console.error(error);
-                    res.status(400).send({ message: "An error occurred while requesting OTP" });
+                   return res.status(400).send({ message: "An error occurred while requesting OTP" });
                 });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: "An error occurred" });
+       return res.status(500).send({ message: "An error occurred" });
     }
 });
 
@@ -192,11 +193,11 @@ router.post("/verify_otp", async (req, res) => {
     
     axios(sms).then((message) => {
             console.log(`SMS sent: ${message.sid}`);
-            res.status(200).json({ status: 'SMS sent successfully' });
+           return res.status(200).json({ status: 'SMS sent successfully' });
         })
         .catch((error) => {
             console.error('Error sending SMS:', error);
-            res.status(500).json({ error: 'Failed to send SMS' });
+           return res.status(500).json({ error: 'Failed to send SMS' });
         });
 });
 
