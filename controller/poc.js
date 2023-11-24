@@ -5,39 +5,39 @@ const axios = require('axios');
 
 const Sequelize = require('sequelize');
 
-async function insertMember(member) {
-    // Get the current level
-    const currentLevel = await TreeData.count({
-      where: {
-        level: {
-          [Sequelize.Op.lt]: Sequelize.literal('(SELECT MAX(level) FROM treedata)'),
-        },
-      },
-    });
+// async function insertMember(member) {
+//     // Get the current level
+//     const currentLevel = await TreeData.count({
+//       where: {
+//         level: {
+//           [Sequelize.Op.lt]: Sequelize.literal('(SELECT MAX(level) FROM treedata)'),
+//         },
+//       },
+//     });
   
-    // Update the member's level
-    member.level = currentLevel + 1;
+//     // Update the member's level
+//     member.level = currentLevel + 1;
   
-    // Save the member to the database
-    await TreeData.save(member);
+//     // Save the member to the database
+//     await TreeData.save(member);
   
-    // Return the member object
-    return member;
-  }
+//     // Return the member object
+//     return member;
+//   }
   
-  // Create an API endpoint to insert a member
-  router.post('/insertMember', async (req, res) => {
-    // Create a new member object
+//   // Create an API endpoint to insert a member
+//   router.post('/insertMember', async (req, res) => {
+//     // Create a new member object
    
 
-    const member = {};
-    console.log('Level before: ', member.level);
-    // Insert the member into the database
-     member = await insertMember(member);
-    console.log('Level after: ', member.level);
-    // Respond with the new member object
-    res.json(member);
-  });
+//     const member = {};
+//     console.log('Level before: ', member.level);
+//     // Insert the member into the database
+//      member = await insertMember(member);
+//     console.log('Level after: ', member.level);
+//     // Respond with the new member object
+//     res.json(member);
+//   });
 
 
 
@@ -91,56 +91,66 @@ async function insertMember(member) {
 //   });
 
 
-router.post('/registerParent', async (req, res) => {
-    try {
-      // Get the parent data from the request body
-      const { name, age, phone, email, gender } = req.body;
+// router.post('/registerParent', async (req, res) => {
+//     try {
+//       // Get the parent data from the request body
+//       const { name, age, phone, email, gender } = req.body;
   
-      // Register the parent with level 1
-      const parent = await TreeData.create({
-        name,
-        age,
-        phone,
-        email,
-        gender,
-        level: 1,
-        parentId: null, // Since it's a parent, there is no parent ID
-      });
-      const child = {};
-      // Set the initial level and parent ID for the child nodes
-      const level = 1;
-      let parentId = parent.id;
+//       // Register the parent with level 1
+//       const parent = await TreeData.create({
+//         name,
+//         age,
+//         phone,
+//         email,
+//         gender,
+//         level: 1,
+//         parentId: null, // Since it's a parent, there is no parent ID
+//       });
+//       const child = {};
+//       // Set the initial level and parent ID for the child nodes
+//       const level = 1;
+//       let parentId = parent.id;
   
-      if (level <= 1) {
-        // Register the children based on the level
-        for (let i = 1; i <= level * 3; i++) {
-            const l = level;
-            // Adjust this logic to customize child data as needed
-            const child = {};
-            child.name = child.name;
-            child.age = child.age;
-            child.phone = child.phone;
-            child.email = child.email;
-            child.gender = child.gender;
-            child.level = l;
-            child.parentId = parentId;
+//       if (level <= 1) {
+//         // Register the children based on the level
+//         for (let i = 1; i <= level * 3; i++) {
+//             const l = level;
+//             // Adjust this logic to customize child data as needed
+//             const child = {};
+//             child.name = child.name;
+//             child.age = child.age;
+//             child.phone = child.phone;
+//             child.email = child.email;
+//             child.gender = child.gender;
+//             child.level = l;
+//             child.parentId = parentId;
         
-            // Create the child node
-            await TreeData.create(child);
-          }
+//             // Create the child node
+//             await TreeData.create(child);
+//           }
   
-        // Increment the level for the next iteration
-        level += 1;
-      }
+//         // Increment the level for the next iteration
+//         level += 1;
+//       }
   
-      // Return a success response to the client
-      res.status(201).json({ message: 'Parent and children registered successfully' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred' });
-    }
-  });
+//       // Return a success response to the client
+//       res.status(201).json({ message: 'Parent and children registered successfully' });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ error: 'An error occurred' });
+//     }
+//   });
 
+
+
+router.post('/insert', async (req, res) => {
+  try {
+          const { name, age, phone, email, gender } = req.body;
+          
+  } catch (error) {
+  }
+      
+ })
 
 
 

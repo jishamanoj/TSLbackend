@@ -23,7 +23,7 @@ router.post('/registerUser', async (req, res) => {
 
         if (existingUser) {
                  
-               return res.status(400).send({ message: "User already exists" });
+               return res.status(404).json({ message: "User already exists" });
             }
          else {
             // User does not exist, generate a new OTP and save the user with verify set as false
@@ -41,19 +41,19 @@ router.post('/registerUser', async (req, res) => {
                 .then(async (response) => {
                     // Save the user data to the database, including OTP and verify set as false
                     const user = await reg.create({                  
-                        email,
-                        phone,
+                       email,
+                       phone,
                         verify: 'false',
                         otp ,
                         otpTimestamp: new Date() 
                         // Store OTP in the database
                     });
-
-                   return res.status(200).send({ message: "User registered successfully" });
+                user.save();
+                   return res.status(200).json({ message: "User registered successfully" });
                 })
                 .catch((error) => {
                     console.error(error);
-                   return res.status(400).send({ message: "An error occurred while requesting OTP" });
+                   return res.status(404).json({ message: "An error occurred while requesting OTP" });
                 });
         }
     } catch (error) {
@@ -111,12 +111,12 @@ router.post('/registerUser', async (req, res) => {
   
 router.post("/verify_otp", async (req, res) => {
     console.log("<........verify OTP user........>");
-    const { first_name, last_name, DOB, gender, country, phone, reference, language, remark, OTP } = req.body;
+    const { first_name, last_name,email, DOB, gender, country, phone, reference, languages, remark, OTP } = req.body;
     console.log("Phone: " + phone);
     console.log("OTP: " + OTP);
 
     try {
-        // Find the user with the provided phone number
+        //Find the user with the provided phone number
         const user = await reg.findOne({ where: { phone: phone } });
 
         if (!user) {
@@ -125,7 +125,11 @@ router.post("/verify_otp", async (req, res) => {
 
         console.log("................");
         console.log("Stored OTP: " + user.otp);
-
+        const d = new Date();
+        let month = d.getMonth() + 1; //months from 1-12
+        let day = d.getDate();
+        let year = d.getFullYear() + 5;
+        const exp = `${day}/${month}/${year}`
         // Check if OTP is valid
         if (user.otp === OTP) {
             const currentTime = new Date();
@@ -137,13 +141,16 @@ router.post("/verify_otp", async (req, res) => {
             if (currentTime - otpTimestamp <= 2 * 60 * 1000) {
                 user.first_name = first_name;
                 user.last_name = last_name;
+                //user.email = email;
                 user.DOB = DOB;
                 user.gender = gender;
+                user.phone = phone;
                 user.country = country;
                 user.reference = reference;
-                user.language = language;
+                user.languages = languages;
                 user.remark = remark;
-
+                user.DOB = new Date();
+                user.expiredDate = exp;
                 // Clear the OTP and save the user
                 user.otp = '';
                 user.verify = 'true';
@@ -155,7 +162,7 @@ router.post("/verify_otp", async (req, res) => {
                 await user.destroy();
 
                 // Respond with an error message
-                return res.status(400).send("OTP has expired");
+                return res.status(404).send("OTP has expired");
             }
         }else{
             const currentTime = new Date();
@@ -163,11 +170,11 @@ router.post("/verify_otp", async (req, res) => {
                 if (currentTime - otpTimestamp > 2 * 60 * 1000){
             // If OTP is invalid, delete the user record
             await user.destroy();
-            return res.status(400).send("Time expired");
+            return res.status(404).send("Time expired");
                 }
                 else {
             // Respond with an error message
-            return res.status(400).send("Invalid OTP");
+            return res.status(404).send("Invalid OTP");
                 }
         }
     } catch (err) {
@@ -177,29 +184,29 @@ router.post("/verify_otp", async (req, res) => {
 });
 
   
-  router.post('/send-sms', (req, res) => {
-    const to = req.body.to; // Extract 'to' from the request body
+//   router.post('/send-sms', (req, res) => {
+//     const to = req.body.to; // Extract 'to' from the request body
 
-    // Use the Twilio client to send an SMS
+//     // Use the Twilio client to send an SMS
     
-    const sms = {
-        method: 'get',
-        url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&message=Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :+919008290027&language=english&route=q&numbers=${to}`,
-      //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
-        headers: {
-            Accept: 'application/json'
-        }
-    };
+//     const sms = {
+//         method: 'get',
+//         url :`https://www.fast2sms.com/dev/bulkV2?authorization=aKVbUigWHc8CBXFA9rRQ17YjD4xhz5ovJGd6Ite3k0mnSNuZPMolFREdzJGqw8YVAD7HU1OatPTS6uiK&message=Your registration is complete! . For the zoom session please send a hi to the WhatsApp number :https://wa.me/+919008290027&language=english&route=q&numbers=${to}`,
+//       //  url: `https://2factor.in/API/V1/57e72ad2-8dae-11ed-9158-0200cd936042/SMS/${phone}/AUTOGEN2`,
+//         headers: {
+//             Accept: 'application/json'
+//         }
+//     };
     
-    axios(sms).then((message) => {
-            console.log(`SMS sent: ${message.sid}`);
-           return res.status(200).json({ status: 'SMS sent successfully' });
-        })
-        .catch((error) => {
-            console.error('Error sending SMS:', error);
-           return res.status(500).json({ error: 'Failed to send SMS' });
-        });
-});
+//     axios(sms).then((message) => {
+//             console.log(`SMS sent: ${message.sid}`);
+//            return res.status(200).json({ status: 'SMS sent successfully' });
+//         })
+//         .catch((error) => {
+//             console.error('Error sending SMS:', error);
+//            return res.status(500).json({ error: 'Failed to send SMS' });
+//         });
+// });
 
 router.post('/countries', async (req, res) => {
     const data = req.body; // Assuming req.body is an array of objects
@@ -261,7 +268,7 @@ router.post('/resendOtp', async (req, res) => {
                     res.status(400).send({ message: "An error occurred while requesting OTP" });
                 });
         } else {
-            res.status(400).send({ message: "User not found" });
+            res.status(404).send({ message: "User not found" });
         }
     } catch (error) {
         console.error(error);
@@ -286,10 +293,10 @@ router.get('/listName/:id', async (req, res) => {
         const members = await reg.findAll({
             where: {
                 id: {
-                    [Op.gte]: selectedMember.id, // Greater than or equal to the selected member's id
+                    [Op.lte]: selectedMember.id, // Greater than or equal to the selected member's id
                 },
             },
-            order: [['id', 'ASC']], // Order by id in ascending order
+            order: [['id', 'DESC']], // Order by id in ascending order
             limit: 5, // Limit to retrieve 5 records
             attributes: ['first_name', 'last_name'], // Select only the first_name and last_name columns
         });

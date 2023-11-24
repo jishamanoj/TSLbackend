@@ -11,15 +11,15 @@ const reg = sequelize.define('reg', {
     gender : { type: DataTypes.STRING },
     email: { type: DataTypes.STRING ,
     unique: true,
-    allowNull: false
+    allowNull: true
 },
     country: { type: DataTypes.STRING },
     phone: { type: DataTypes.STRING ,
         unique: true,
-        allowNull: false},
+        allowNull: true},
     reference: { type: DataTypes.STRING },
-    language: { type: DataTypes.STRING },
-    remark: { type: DataTypes.STRING },
+   languages: DataTypes.STRING,
+    remark: { type: DataTypes.TEXT},
     otp: { type: DataTypes.STRING },
     verify: { type: DataTypes.STRING,
         defaultValue: 'false'},
@@ -31,13 +31,19 @@ const reg = sequelize.define('reg', {
             type: DataTypes.DATE,
             allowNull: true
         },
+        DOJ: { type: DataTypes.DATE,
+            allowNull: true
+        },
+        expiredDate : { type: DataTypes.DATE,
+            allowNull: true},
 }, 
 {
     timestamps: false,
 })
-reg.sync().then((data)=>{
-        //console.log(data);
-        console.log('table created');
+reg.sync()
+.then((data)=>{
+        console.log(data);
+        console.log('reg table created');
     })
     .catch((err)=>{
         console.log(err);
