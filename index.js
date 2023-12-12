@@ -10,11 +10,6 @@ app.use(cors());
 app.use(express.json())
 
 app.use('/api', require('./router/routing')); // Corrected the router path
-
-
-
-
-
 const httpServer = http.createServer(app)
 
 

@@ -1,19 +1,13 @@
 
-
 const http = require('http');
 const {Server} = require('socket.io')
 const Sequelize = require('sequelize');
 const { QueryTypes } = require('sequelize');
 
 const app = require('./index');
-
-
-
-
 const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
     dialect: 'mysql'
 });
-
 
 const server = http.createServer(app)
 const io = new Server(server, {

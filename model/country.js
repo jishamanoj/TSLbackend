@@ -1,6 +1,8 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
-    dialect: 'mysql'
+    dialect: 'mysql',
+    logging: false,
+
 });
 const country = sequelize.define('country', {
     name: { type: DataTypes.STRING },
