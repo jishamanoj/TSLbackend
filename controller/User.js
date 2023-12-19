@@ -9,8 +9,8 @@ const Redis = require('ioredis');
 const redis = new Redis();
 const questions =require("../model/question");
 const {Users,sequelize} = require('../model/validUsers');
-const meditation =require('../model/meditation');
-
+const Meditation =require('../model/meditation');
+const moment = require('moment');
 const bcrypt = require('bcrypt');
 
 router.post('/countries', async (req, res) => {
@@ -737,14 +737,102 @@ return res.status(200).json({ message: 'User deleted successfully' });
     }
 });
 
-router.post('/meditaion',async(req, res, next)=>{
+router.post('/meditation',async(req, res, next)=>{
     try{
-        const { med_starttime, med_stoptime } = req.body;
-        const med_endtime = new Date(new Date(med_starttime).getTime() + 45 * 60 * 1000);
+         const {startdatetime,stopdatetime}   = req.body;
+     //    const startdatetime = "2023-12-19 14:06:49";
 
-    
+//const stopdatetime = "2023-12-19 14:56:49";
+
+const refStartDate = moment(`${startdatetime}`, "YYYY-MM-DD HH:mm:ss");
+
+const refFutureDate = refStartDate.clone().add(45, "minutes");
+
+const refStopDate = moment(`${stopdatetime}`, "YYYY-MM-DD HH:mm:ss");
+
+const difference = refStopDate.diff(refStartDate,'minutes')
+     
+     
+        const meditationRecord = await Meditation.create({
+            med_starttime : refStartDate.format('YYYY-MM-DD HH:mm:ss'),
+            med_stoptime :refStopDate.format('YYYY-MM-DD HH:mm:ss'),
+            med_endtime:refFutureDate.format('YYYY-MM-DD HH:mm:ss'),
+            
+            session_num: '0', // Change this based on your requirements
+            day: 0, // Change this based on your requirements
+            cycle: 0, // Change this based on your requirements
+           
+          });
+        //  defferance = refactor_startDate.diff(refactor_endDate,'minutes')
+          if(difference >= 45){
+
+            meditationRecord.session_num += 1
+            await meditationRecord.save();
+          }
+          if(meditationRecord.session_num == 2){
+            meditationRecord.day += 1
+            meditationRecord.session_num = 0
+            await meditationRecord.save();
+
+          }
+          if (meditationRecord.day == 41){
+            meditationRecord.cycle += 1
+            meditationRecord.day = 0
+          }
+
+          await meditationRecord.save();
+          return res.status(200).json({ message: 'Meditation time inserted successfully' });
     }catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 })
+
+
+// router.post('/meditation',async(req, res, next)=>{
+//     try{
+//         if (req.body.med_stoptime){
+//         }
+//      else{   //const {med_starttime,med_stoptime}   = req.body;
+//         const med_starttime = moment();
+
+
+//         var med_endtime = moment().add(45, 'minutes');
+//         console.log(med_starttime.format("YYYY-MM-DD"),med_starttime.format("HH:mm:ss"),med_endtime.format("HH:mm:ss"))
+     
+//         const meditationRecord = await Meditation.create({
+//             med_starttime,
+//             med_stoptime,
+//             med_endtime,
+            
+//             session_num: '0', // Change this based on your requirements
+//             day: 0, // Change this based on your requirements
+//             cycle: 0, // Change this based on your requirements
+           
+//           });
+//           session_num = med_starttime.diff(med_stoptime,'minutes')
+//           if(session_num == 45){
+
+//             meditationRecord.session_num = session_num + 1
+
+//           }
+//           if(meditationRecord.session_num == 2){
+//             meditationRecord.day = +1
+//             meditationRecord.session_num = 0
+
+
+//           }
+//           if (meditationRecord.day == 41){
+//             meditationRecord.cycle = +1
+//             meditationRecord.day = 0
+//           }
+
+//           await meditationRecord.save();
+//           return res.status(200).json({ message: 'Meditation time inserted successfully' });
+//     }}catch (error) {
+//         console.error('Error:', error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// })
 
 module.exports = router;

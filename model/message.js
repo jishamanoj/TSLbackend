@@ -1,10 +1,10 @@
 require('dotenv').config();
 const { DataTypes, Sequelize } = require('sequelize');
 //const bcrypt = require('bcrypt');
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-    dialect: process.env.DB_DIALECT,
+const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
+    dialect: 'mysql',
     logging: false,
-
+    
 });
 const message = sequelize.define('message',{
     userId: { type: DataTypes.INTEGER},
