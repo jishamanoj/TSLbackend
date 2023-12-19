@@ -738,7 +738,13 @@ return res.status(200).json({ message: 'User deleted successfully' });
 });
 
 router.post('/meditaion',async(req, res, next)=>{
+    try{
+        const { med_starttime, med_stoptime } = req.body;
+        const med_endtime = new Date(new Date(med_starttime).getTime() + 45 * 60 * 1000);
+
     
+    }catch (error) {
+    }
 })
 
 module.exports = router;

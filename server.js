@@ -1,12 +1,12 @@
-
+require('dotenv').config();
 const http = require('http');
 const {Server} = require('socket.io')
 const Sequelize = require('sequelize');
 const { QueryTypes } = require('sequelize');
 
 const app = require('./index');
-const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
-    dialect: 'mysql'
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+    dialect: process.env.DB_DIALECT
 });
 
 const server = http.createServer(app)
@@ -42,6 +42,6 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
-    server.listen(3000, () => {
+    server.listen(process.env.SERVER_PORT, () => {
     console.log('Listening on port 3000');
 });
