@@ -737,56 +737,114 @@ return res.status(200).json({ message: 'User deleted successfully' });
     }
 });
 
-router.post('/meditation',async(req, res, next)=>{
-    try{
-         const {startdatetime,stopdatetime}   = req.body;
-     //    const startdatetime = "2023-12-19 14:06:49";
+// router.post('/meditation',async(req, res, next)=>{
+//     try{
+//          const {startdatetime,stopdatetime}   = req.body;
+//      //    const startdatetime = "2023-12-19 14:06:49";
 
-//const stopdatetime = "2023-12-19 14:56:49";
+// //const stopdatetime = "2023-12-19 14:56:49";
 
-const refStartDate = moment(`${startdatetime}`, "YYYY-MM-DD HH:mm:ss");
+// const refStartDate = moment(`${startdatetime}`, "YYYY-MM-DD HH:mm:ss");
 
-const refFutureDate = refStartDate.clone().add(45, "minutes");
+// const refFutureDate = refStartDate.clone().add(45, "minutes");
 
-const refStopDate = moment(`${stopdatetime}`, "YYYY-MM-DD HH:mm:ss");
+// const refStopDate = moment(`${stopdatetime}`, "YYYY-MM-DD HH:mm:ss");
 
-const difference = refStopDate.diff(refStartDate,'minutes')
+// const difference = refStopDate.diff(refStartDate,'minutes')
      
      
-        const meditationRecord = await Meditation.create({
-            med_starttime : refStartDate.format('YYYY-MM-DD HH:mm:ss'),
-            med_stoptime :refStopDate.format('YYYY-MM-DD HH:mm:ss'),
-            med_endtime:refFutureDate.format('YYYY-MM-DD HH:mm:ss'),
+//         const meditationRecord = await Meditation.create({
+//             med_starttime : refStartDate.format('YYYY-MM-DD HH:mm:ss'),
+//             med_stoptime :refStopDate.format('YYYY-MM-DD HH:mm:ss'),
+//             med_endtime:refFutureDate.format('YYYY-MM-DD HH:mm:ss'),
             
-            session_num: '0', // Change this based on your requirements
-            day: 0, // Change this based on your requirements
-            cycle: 0, // Change this based on your requirements
+//             session_num: '0', // Change this based on your requirements
+//             day: 0, // Change this based on your requirements
+//             cycle: 0, // Change this based on your requirements
            
-          });
-        //  defferance = refactor_startDate.diff(refactor_endDate,'minutes')
-          if(difference >= 45){
+//           });
+//         //  defferance = refactor_startDate.diff(refactor_endDate,'minutes')
+//           if(difference >= 45){
 
-            meditationRecord.session_num += 1
-            await meditationRecord.save();
-          }
-          if(meditationRecord.session_num == 2){
-            meditationRecord.day += 1
-            meditationRecord.session_num = 0
-            await meditationRecord.save();
+//             meditationRecord.session_num += 1
+//             await meditationRecord.save();
+//           }
+//           if(meditationRecord.session_num == 2){
+//             meditationRecord.day += 1
+//             meditationRecord.session_num = 0
+//             await meditationRecord.save();
 
-          }
-          if (meditationRecord.day == 41){
-            meditationRecord.cycle += 1
-            meditationRecord.day = 0
-          }
+//           }
+//           if (meditationRecord.day == 41){
+//             meditationRecord.cycle += 1
+//             meditationRecord.day = 0
+//           }
 
-          await meditationRecord.save();
-          return res.status(200).json({ message: 'Meditation time inserted successfully' });
-    }catch (error) {
+//           await meditationRecord.save();
+//           return res.status(200).json({ message: 'Meditation time inserted successfully' });
+//     }catch (error) {
+//         console.error('Error:', error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// })
+
+router.post('/meditation', async (req, res) => {
+    try {
+        const { userId, startdatetime, stopdatetime } = req.body;
+
+        console.log('Received userId:', userId);
+        console.log('Received startdatetime:', startdatetime);
+        console.log('Received stopdatetime:', stopdatetime);
+
+        // Check if userId exists in the reg table
+        const userExists = await reg.findOne({ where: { userId } });
+        if (!userExists) {
+            return res.status(404).json({ error: 'User not found in reg table' });
+        }
+
+        const refStartDate = moment(`${startdatetime}`, "YYYY-MM-DD HH:mm:ss", true);
+        const refFutureDate = refStartDate.clone().add(45, "minutes");
+        const refStopDate = moment(`${stopdatetime}`, "YYYY-MM-DD HH:mm:ss", true);
+
+        console.log('Parsed startdatetime:', refStartDate.format('YYYY-MM-DD HH:mm:ss'));
+        console.log('Parsed stopdatetime:', refStopDate.format('YYYY-MM-DD HH:mm:ss'));
+
+        const difference = refStopDate.diff(refStartDate, 'minutes');
+
+        console.log('Difference:', difference);
+
+        const meditationRecord = await Meditation.create({
+            userId, // Use the userId from the request body
+            med_starttime: refStartDate.format('YYYY-MM-DD HH:mm:ss'),
+            med_stoptime: refStopDate.format('YYYY-MM-DD HH:mm:ss'),
+            med_endtime: refFutureDate.format('YYYY-MM-DD HH:mm:ss'),
+            session_num: 0,
+            day: 0,
+            cycle: 0,
+        });
+
+        if (difference >= 45) {
+            meditationRecord.session_num += 1;
+        }
+
+        if (meditationRecord.session_num === 2) {
+            meditationRecord.day += 1;
+            meditationRecord.session_num = 0;
+        }
+
+        if (meditationRecord.day === 41) {
+            meditationRecord.cycle += 1;
+            meditationRecord.day = 0;
+        }
+
+        await meditationRecord.save();
+        return res.status(200).json({ message: 'Meditation time inserted successfully' });
+    } catch (error) {
         console.error('Error:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
-})
+});
+
 
 
 // router.post('/meditation',async(req, res, next)=>{

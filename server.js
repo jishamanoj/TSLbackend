@@ -5,8 +5,10 @@ const Sequelize = require('sequelize');
 const { QueryTypes } = require('sequelize');
 
 const app = require('./index');
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-    dialect: process.env.DB_DIALECT
+const sequelize = new Sequelize("sequel", "root", "E@asybiz_d@_t@b@se_1234567", {
+  dialect: "mysql",
+
+
 });
 
 const server = http.createServer(app)
@@ -42,6 +44,6 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
-    server.listen(process.env.SERVER_PORT, () => {
+    server.listen(3000, () => {
     console.log('Listening on port 3000');
 });
