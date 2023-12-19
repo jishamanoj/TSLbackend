@@ -1,5 +1,5 @@
 const express = require('express');
-const reg = require('../model/registration');
+const {reg,BankDetails} = require('../model/registration');
 const router = express.Router();
 const { Op } = require("sequelize");
 const axios = require('axios');
@@ -7,8 +7,9 @@ const Country =require('../model/country');
 const session = require('express-session');
 const Redis = require('ioredis');
 const redis = new Redis();
-
-const{ validUser,BankDetails} = require('../model/validUsers');
+const questions =require("../model/question");
+const {Users,sequelize} = require('../model/validUsers');
+const meditation =require('../model/meditation');
 
 const bcrypt = require('bcrypt');
 
@@ -29,16 +30,19 @@ router.post('/countries', async (req, res) => {
         res.status(400).send({ message: "Invalid data format. Please send an array of objects." });
     }
 });
-
 router.get('/countrieslist', async (req, res) => {
     try {
-        const countries = await Country.findAll();
-        res.json(countries);
+      const countries = await Country.findAll({
+        order: [['name', 'ASC']], // Order by the 'name' field in ascending order
+      });
+  
+      res.json(countries);
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "An error occurred while fetching countries" });
+      console.error(error);
+      res.status(500).send({ message: 'An error occurred while fetching countries' });
     }
-});
+  });
+
 
 router.post('/registerUser', async (req, res) => {
     const { email, phone } = req.body;
@@ -54,10 +58,16 @@ router.post('/registerUser', async (req, res) => {
         });
 
         if (existingUser) {
-            return res.status(409).json({ message: "User already exists" });
+
+            if (existingUser.email === email) {
+                return res.status(400).json({ message: "Email already exists" , status:'false',flag :'email'});
+            } else {
+                return res.status(400).json({ message: "Phone number already exists",status:'false',flag :'phone' });
+            }
         } else {
             // User does not exist, generate a new OTP
             const otp = generateOTP();
+            console.log(otp);
 
             // Save the OTP in Redis with a key that includes the user's phone number
             const redisKey = `otp:${phone}`;
@@ -107,10 +117,180 @@ router.get('/displayDataFromRedis/:key', async (req, res) => {
     }
 });
 
+// router.post("/verify_otp", async (req, res) => {
+//     console.log("<........verify OTP user........>");
+
+//     const { first_name, last_name, email, DOB, gender, country, phone, reference, language, remark, OTP } = req.body;
+//     console.log(first_name, last_name, email, DOB, gender, country, phone, reference, language, remark, OTP)
+
+//     console.log("Phone: " + phone);
+//     console.log("OTP: " + OTP);
+
+//     try {
+//         // Retrieve the stored OTP from Redis
+//         const redisKey = `otp:${phone}`;
+//         const storedOTP = await redis.get(redisKey);
+
+//         if (!storedOTP) {
+//             return res.status(401).send("OTP not found in Redis");
+//         }
+
+//         // Verify the OTP
+//         if (storedOTP === OTP) {
+//             //const hashedPassword = await bcrypt.hash(phone, 10);
+//             bcrypt.hash(String(phone), 10,async function(err, hashedPassword) {
+//                 // Store hash in your password DB.
+
+//                 if(err) {
+//                     return res.status(500).json({message: "Something went wrong"});
+//                 }
+
+//             console.log(hashedPassword,err, "hash");
+//             // Store the data in the reg table
+//             const user = await reg.findOrCreate({
+//                 where: { phone: phone },
+//                 defaults: {
+//                     first_name,
+//                     last_name,
+//                     email,
+//                     DOB,
+//                     gender,
+//                     country,
+//                     reference,
+//                     language,
+//                     remark,
+//                     DOJ : new Date(),
+//                     expiredDate : calculateExpirationDate(),
+//                     password: hashedPassword,
+//                     verify: 'true'
+//                 }
+//             });
+
+//             const extractedValues = Object.values(user.dataValues);
+
+//              console.log("lineno162",extractedValues);
+//              console.log("line 163 ",user)
+
+
+            
+
+//             // Delete the OTP from Redis after successful verification
+//             await redis.del(redisKey);
+
+//             return res.status(200).json({message:"Success",data:extractedValues});
+//         })
+//         } else {
+//             // Respond with an error message if OTP is invalid
+//             return res.status(400).json({message:"Invalid OTP"});
+//         }
+//     } catch (err) {
+//         console.error("<........error........>", err);
+//         return res.status(500).json({message : err.message || "An error occurred during OTP verification"});
+//     }
+// });
+
+
+// router.post("/verify_otp", async (req, res) => {
+//     console.log("<........verify OTP user........>");
+
+//     const { first_name, last_name, email, DOB, gender, country, phone, reference, languages, remark, OTP } = req.body;
+
+//     console.log("Phone: " + phone);
+//     console.log("OTP: " + OTP);
+
+//     try {
+//         // Retrieve the stored OTP from Redis
+//         const redisKey = `otp:${phone}`;
+//         const storedOTP = await redis.get(redisKey);
+
+//         if (!storedOTP) {
+//             return res.status(401).send("OTP not found in Redis");
+//         }
+
+//         // Verify the OTP
+//         if (storedOTP === OTP) {
+//             const hashedPassword = await bcrypt.hash(phone, 10);
+
+//             // // Store the data in the reg table
+//             // const [user, created] = await reg.findOrCreate({
+//             //     where: { phone: phone },
+//             //     defaults: {
+//             //         first_name,
+//             //         last_name,
+//             //         email,
+//             //         DOB,
+//             //         gender,
+//             //         country,
+//             //         reference,
+//             //         languages,
+//             //         remark,
+//             //         DOJ : new Date(),
+//             //         expiredDate : calculateExpirationDate(),
+//             //         password: hashedPassword,
+//             //         verify: 'true'
+//             //     }
+//             // });
+
+//             user.first_name = first_name;
+//                 user.last_name = last_name;
+//                 user.email = email;
+//                 user.DOB = DOB;
+//                 user.gender = gender;
+//                 user.phone = phone;
+//                 user.country = country;
+//                 user.reference = reference;
+//                 user.languages = languages;
+//                 user.remark = remark;
+//                 user.DOJ = new Date();
+//                 user.expiredDate = calculateExpirationDate();
+//                 user.password = hashedPassword; // Store the hashed password
+//                 user.verify = 'true';
+//                 const data = await user.save();
+
+//             await BankDetails.create({
+//                 AadarNo: 0,
+//                 IFSCCode: "",
+//                 branchName: "",
+//                 accountName: "",
+//                 accountNo: 0,
+//                 regId: user.id // Assuming regId is the foreign key in BankDetails
+//             });
+
+//             // Delete the OTP from Redis after successful verification
+//             await redis.del(redisKey);
+//             // const data = {
+//             //     message: "Success",
+//             //     data: {
+//             //         id: user.id,
+//             //         first_name: user.first_name,
+//             //         last_name: user.last_name,
+//             //         DOJ: user.DOJ,
+//             //         expiredDate: user.expiredDate,
+//             //         userId: user.userId
+//             //     }
+//             // };
+
+//             return res.status(200).json({ message: "Success", data });
+//         } else {
+//             // Respond with an error message if OTP is invalid
+//             return res.status(400).send("Invalid OTP");
+//         }
+//     } catch (err) {
+//         console.error("<........error........>", err);
+//         return res.status(500).send(err.message || "An error occurred during OTP verification");
+//     }
+// });
+// function calculateExpirationDate() {
+//     const d = new Date();
+//     d.setFullYear(d.getFullYear() + 5);
+//     return d;
+// }
+
 router.post("/verify_otp", async (req, res) => {
     console.log("<........verify OTP user........>");
 
-    const { first_name, last_name, email, DOB, gender, country, phone, reference, language, remark, OTP } = req.body;
+    const { first_name, last_name, email, DOB, gender, country, phone, reference, languages, remark, OTP } = req.body;
+    console.log(first_name, last_name, email, DOB, gender, country, phone, reference, languages, remark, OTP)
 
     console.log("Phone: " + phone);
     console.log("OTP: " + OTP);
@@ -127,46 +307,62 @@ router.post("/verify_otp", async (req, res) => {
         // Verify the OTP
         if (storedOTP === OTP) {
             const hashedPassword = await bcrypt.hash(phone, 10);
+            const maxUserId = await reg.max('userId');
+            const userId = maxUserId + 1;
+            // Update the user record
+         //   const user = await reg.findOne({ where: { phone } });
 
-            // Store the data in the reg table
-            const [user, created] = await reg.findOrCreate({
-                where: { phone: phone },
-                defaults: {
-                    first_name,
-                    last_name,
-                    email,
-                    DOB,
-                    gender,
-                    country,
-                    reference,
-                    language,
-                    remark,
-                    password: hashedPassword,
-                    verify: 'true'
-                }
+            // if (!user) {
+            //     return res.status(404).send("User not found");
+            // }
+
+            // Update user data
+            const user = await reg.create({
+            first_name,
+            last_name,
+            email,
+            DOB,
+            gender,
+            phone,
+            country,
+            reference,
+            languages,
+            remark,
+            userId,
+            DOJ : new Date(),
+            expiredDate : calculateExpirationDate(),
+            password : hashedPassword, // Store the hashed password
+            verify : 'true'
+        });
+            // Save the updated user data
+            await user.save();
+
+            // Create a record in the BankDetails table
+            await BankDetails.create({
+                AadarNo: 0,
+                IFSCCode: "",
+                branchName: "",
+                accountName: "",
+                accountNo: 0,
+                regId: user.id // Assuming regId is the foreign key in BankDetails
             });
-
-            if (!created) {
-                // Update the user data if the user already exists
-                user.update({
-                    first_name,
-                    last_name,
-                    email,
-                    DOB,
-                    gender,
-                    country,
-                    reference,
-                    language,
-                    remark,
-                    password: hashedPassword,
-                    verify: 'true'
-                });
-            }
 
             // Delete the OTP from Redis after successful verification
             await redis.del(redisKey);
 
-            return res.status(200).send("Success");
+            const responseData = {
+                message: "Success",
+                data: {
+                    id: user.id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    DOJ: user.DOJ,
+                    expiredDate: user.expiredDate,
+                    userId: user.userId
+                }
+            };
+
+            return res.status(200).json(responseData);
         } else {
             // Respond with an error message if OTP is invalid
             return res.status(400).send("Invalid OTP");
@@ -176,6 +372,13 @@ router.post("/verify_otp", async (req, res) => {
         return res.status(500).send(err.message || "An error occurred during OTP verification");
     }
 });
+
+function calculateExpirationDate() {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 5);
+    return d;
+}
+
 
 router.get('/listName/:id', async (req, res) => {
     try {
@@ -241,7 +444,7 @@ router.post('/requestPasswordReset', async (req, res) => {
 
             await axios(otpRequest);
 
-            return res.status(200).json({ message: "OTP sent successfully" });
+            return res.status(200).json({ message: "OTP sent successfully",otp : otp });
         }
     } catch (error) {
         console.error("Error registering user:", error);
@@ -263,36 +466,21 @@ router.post('/resetPassword', async (req, res) => {
         // Retrieve the stored OTP from Redis
         const redisKey = `reqotp:${regUser.phone}`;
         const storedOTP = await redis.get(redisKey);
-        console.log(storedOTP)
 
         if (!storedOTP) {
-            return res.status(401).send("OTP not found in Redis");
+            return res.status(401).json({message:"Otp has expired" });``
         }
 
         if (storedOTP === otp) {
             const hashedPassword = await bcrypt.hash(new_password, 10);
 
-            // Save details in the 'validUser' table
-            await validUser.create({
-                email: regUser.email,
-                first_name: regUser.first_name,
-                last_name: regUser.last_name,
-                DOB : regUser.DOB,
-                gender : regUser.gender,
-                email : regUser.email,
-                country : regUser.country,
-                phone : regUser.phone,
-                reference : regUser.reference,
-                languages: regUser.languages,
-                remark : regUser.remark,
-                userId : regUser.userId,
-                DOJ : regUser.DOJ,
-                expiredDate: regUser.expiredDate,
-                password: hashedPassword
+            // Update password and set classAttended to true in the 'reg' table
+            await reg.update({
+                password: hashedPassword,
+                classAttended: true,
+            }, {
+                where: { email: regUser.email },
             });
-
-            // Delete the user from the 'reg' table
-            await regUser.destroy();
 
             // Delete the OTP from Redis after successful verification
             await redis.del(redisKey);
@@ -303,8 +491,8 @@ router.post('/resetPassword', async (req, res) => {
             return res.status(400).send("Invalid OTP");
         }
     } catch (err) {
-        console.error("<........error........>", err);
-        return res.status(500).send(err.message || "An error occurred during OTP verification");
+        console.error("Error resetting password:", err);
+        return res.status(500).send(err.message || "An error occurred during password reset");
     }
 });
 const sessionMiddleware = session({
@@ -325,14 +513,16 @@ router.post('/login', async (req, res) => {
   
     
   if (!email || !password) {
-      return res.status(400).json({ message:
-   
-  'Email and password are required' });
+      return res.status(400).json({ message:'Email and password are required' });
     }
   
     try {
-      const user = await validUser.findOne({ where: { email } });
-  
+        const user = await reg.findOne({
+            where: {
+                email: email,
+                classAttended: true, // Check if classAttended is true
+            },
+        });
       if (!user) {
         return res.status(404).json({ message: 'Invalid email or password' });
       }
@@ -345,7 +535,7 @@ router.post('/login', async (req, res) => {
   
       // Create session and store user ID
       req.session.userId = user.id;
-  
+      //xconsole.log(res)
       res.json({
         message: 'Login successful',
         user: {
@@ -383,13 +573,52 @@ router.post('/login', async (req, res) => {
 //     }
 //   });
 
-router.put('/updateUser/:userId', async (req, res) => {
-    const userId = req.params.userId;
+
+
+// router.put('/updateUser/:userId', async (req, res) => {
+//     const userId = req.params.userId;
+//     const userData = req.body;
+
+//     try {
+//         // Find the user by userId
+//         const user = await reg.findByPk(userId);
+
+//         // Update user details
+//         if (user) {
+//             // Update all fields provided in the request
+//             await user.update(userData);
+//         } else {
+//             return res.status(404).json({ error: 'User not found' });
+//         }
+
+//         // Find or create the associated bank details for the user
+//         let bankDetails = await BankDetails.findOne({ where: { regId: userId } });
+//         if (!bankDetails) {
+//             bankDetails = await BankDetails.create({ regId: userId });
+//         }
+
+//         // Update all fields of BankDetails provided in the request
+//         await bankDetails.update(userData);
+
+//         return res.status(200).json({ message: 'User and bank details updated successfully' });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
+
+router.put('/updateUser', async (req, res) => {
+    const userId = req.session.userId; // Retrieve userId from the session
     const userData = req.body;
 
     try {
+        // Check if the user is authenticated
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
         // Find the user by userId
-        const user = await validUser.findByPk(userId);
+        const user = await reg.findByPk(userId);
 
         // Update user details
         if (user) {
@@ -400,9 +629,9 @@ router.put('/updateUser/:userId', async (req, res) => {
         }
 
         // Find or create the associated bank details for the user
-        let bankDetails = await BankDetails.findOne({ where: { validUserId: userId } });
+        let bankDetails = await BankDetails.findOne({ where: { regId: userId } });
         if (!bankDetails) {
-            bankDetails = await BankDetails.create({ validUserId: userId });
+            bankDetails = await BankDetails.create({ regId: userId });
         }
 
         // Update all fields of BankDetails provided in the request
@@ -414,4 +643,100 @@ router.put('/updateUser/:userId', async (req, res) => {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+router.get('/reference/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    console.log("userId",userId);
+  
+    try {
+      const user = await reg.findOne({
+        where: { userId },
+        attributes: ['first_name', 'last_name'],
+      });
+   
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      const fullName = `${user.first_name} ${user.last_name}`.trim();
+      res.json({ full_name: fullName });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  router.get('/list-questions', async (req, res) => {
+    try {
+      const Questions = await questions.findAll();
+      res.json(Questions);
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+
+  router.get('/user-details/:userId', async (req, res) => {
+    const id = req.params.userId;
+
+    try {
+        const userDetails = await reg.findOne({
+            where: { id },
+            include: [BankDetails], // Include BankDetails in the result
+        });
+
+        if (!userDetails) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(userDetails);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.delete('/delete-user/:phone', async (req, res) => {
+    const phone = req.params.phone;
+
+    try {
+        // Find the user based on the phone number
+        const user = await reg.findOne({ where: { phone } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Delete the user
+        await user.destroy();
+
+        return res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.delete('/deleteuser/:phone', async (req, res) => {
+    const phone = req.params.phone;
+    try {
+        // Find the user based on the phone number
+        const user = await reg.findOne({ where: { phone } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+const bank = await bankDetails.findOne({ where: {regId: user.id} });
+await user.destroy();
+if (bank) {
+    await bank.destroy();
+}
+return res.status(200).json({ message: 'User deleted successfully' });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
+
 module.exports = router;

@@ -1,67 +1,210 @@
 
-const { DataTypes, Sequelize } = require('sequelize');
-//const bcrypt = require('bcrypt');
-const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
-    dialect: 'mysql',
-    logging: false,
+// const { DataTypes, Sequelize } = require('sequelize');
+// const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
+//     dialect: 'mysql',
+//     logging: false,
     
+// });
+// const validUser = sequelize.define('validuser', {
+//           UserId: {
+//     type: DataTypes.INTEGER,
+//     primaryKey: true,
+//     autoIncrement: true,
+// },
+// firstName: {
+//     type: DataTypes.STRING(40),
+//     allowNull: false,
+// },
+// secondName: {
+//     type: DataTypes.STRING(40),
+//     allowNull: true,
+// },
+// DOB: {
+//     type: DataTypes.STRING(20),
+//     allowNull: true,
+// },
+// phone: {
+//     type: DataTypes.STRING(20),
+//     allowNull: true,
+// },
+// email: {
+//     type: DataTypes.STRING(50),
+//     allowNull: true,
+// },
+// state: {
+//     type: DataTypes.STRING(20),
+//     allowNull: true,
+// },
+// district: {
+//     type: DataTypes.STRING(20),
+//     allowNull: true,
+// },
+// ReferrerID: {
+//     type: DataTypes.INTEGER,
+//     allowNull: true,
+// },
+// Level: {
+//     type: DataTypes.INTEGER,
+//     allowNull: true,
+//     defaultValue:0
+
+// },
+
+// node_number:{
+//     type:DataTypes.INTEGER,
+//     allowNull:true,
+//     defaultValue:0
+// },
+// reserved_id: {
+//     type: DataTypes.INTEGER,
+//     allowNull: true,
+//     defaultValue:0
+
+// },
+// coupons: {
+//     type: DataTypes.INTEGER,
+//     allowNull: true,
+//     defaultValue:0
+
+// },
+// points: {
+//     type: DataTypes.INTEGER,
+//     allowNull: true,
+//     defaultValue:0
+
+// },
+
+// distribute:{
+//     type:DataTypes.BOOLEAN,
+//     defaultValue:false
+// },
+// distributed_points:{
+//     type:DataTypes.INTEGER,
+//     defaultValue:0
+// },
+
+// ban:{
+//     type:DataTypes.BOOLEAN,
+//     defaultValue:false
+// }
+//   });
+
+// sequelize.sync()
+//     .then((data) => {
+//        // console.log(data);
+//         console.log('validuser table created');
+//     })
+//     .catch((err) => {
+//         console.log(err);
+//     });
+
+
+
+//  module.exports = Users
+
+
+const { DataTypes, Sequelize } = require('sequelize');
+
+const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
+  dialect: 'mysql',
+  logging: console.log, // Set to console.log to see SQL statements
 });
-const validUser = sequelize.define('validuser', {
-    first_name: { type: DataTypes.STRING },
-    last_name: { type: DataTypes.STRING },
-    DOB: { type: DataTypes.STRING },
-    gender: { type: DataTypes.STRING },
-    email: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: true
+
+const Users = sequelize.define(
+  'Users',
+  {
+    UserId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    address: { type: DataTypes.STRING },
-    pincode: { type: DataTypes.INTEGER },
-    state: { type: DataTypes.STRING },
-    district: { type: DataTypes.STRING },
-    country: { type: DataTypes.STRING },
+    firstName: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+    },
+    secondName: {
+      type: DataTypes.STRING(40),
+      allowNull: true,
+    },
+    DOB: {
+      type: DataTypes.STRING(40),
+      allowNull: true,
+    },
     phone: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: true
+      type: DataTypes.STRING(20),
+      allowNull: true,
     },
-    reference: { type: DataTypes.STRING },
-    languages: DataTypes.STRING,
-    remark: { type: DataTypes.TEXT },
-    userId: {
+    email: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    state: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    district: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    ReferrerID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    Level: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    node_number: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    reserved_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    coupons: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    points: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    distribute: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    distributed_points: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    ban: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    UId:{
         type: DataTypes.INTEGER,
-        
-      },
-    DOJ: { type: DataTypes.DATE, allowNull: true },
-    expiredDate: { type: DataTypes.DATE, allowNull: true },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        
-    },
- });
-const BankDetails = sequelize.define('bankDetails', {
-    AadarNo: { type: DataTypes.INTEGER,defaultValue:0 },
-    IFSCCode: { type: DataTypes.STRING,defaultValue:0},
-    branchName: { type: DataTypes.STRING,defaultValue:0},
-    accountName: { type: DataTypes.STRING,defaultValue:0},
-    accountNo: { type: DataTypes.INTEGER,defaultValue:0},
-});
-validUser.hasOne(BankDetails);
+    }
+  },
+  {
+    tableName: 'Users',
+    timestamps:false // Specify the table name here
+  }
+);
 
-sequelize.sync()
-    .then((data) => {
-       // console.log(data);
-        console.log('validuser table created');
-    })
-    .catch((err) => {
-        console.log(err);
-    });
+sequelize
+  .sync({alter: true})
+  .then(() => {
+    console.log('Users table created');
+  })
+  .catch((err) => {
+    console.error('Error syncing Users table:', err);
+  });
 
-
-
-module.exports = { validUser, BankDetails };
-
-
+module.exports = {Users,sequelize};
 
