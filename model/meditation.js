@@ -7,13 +7,15 @@ const sequelize = new Sequelize('sequel', 'root', 'pass@123', {
 });
 
 const meditation = sequelize.define('meditation',{
+    userId: { type: DataTypes.INTEGER},
     session_num: { type: DataTypes.STRING,defaultValue:0},
     day : { type: DataTypes.INTEGER,defaultValue:0  },
     cycle : { type: DataTypes.INTEGER,defaultValue: 0   },
-    med_starttime: { type: DataTypes.STRING},
-    med_stoptime: { type: DataTypes.STRING},
-    med_endtime: { type: DataTypes.STRING},
-    message : { type: DataTypes.TEXT}
+    med_starttime : { type: DataTypes.STRING},
+    med_stoptime : { type: DataTypes.STRING},
+    med_endtime : { type: DataTypes.STRING},
+
+   // message : { type: DataTypes.TEXT}
 });
 
 sequelize.sync({alter:true})

@@ -737,6 +737,8 @@ return res.status(200).json({ message: 'User deleted successfully' });
     }
 });
 
-
+router.post('/meditaion',async(req, res, next)=>{
+    
+})
 
 module.exports = router;
